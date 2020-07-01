@@ -1,4 +1,4 @@
-package com.seclab.signal;
+package com.seclab.signal.UltraSonic;
 
 
 public class Result {

@@ -1,4 +1,4 @@
-package com.seclab.signal;
+package com.seclab.signal.UltraSonic;
 
 
 import android.annotation.TargetApi;
@@ -8,8 +8,6 @@ import android.util.Log;
 import com.seclab.signal.DSP.Complex;
 import com.seclab.signal.DSP.FFT;
 
-import java.lang.reflect.Array;
-import java.util.ArrayList;
 import java.util.Arrays;
 
 

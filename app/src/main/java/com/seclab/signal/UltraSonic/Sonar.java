@@ -1,17 +1,12 @@
-package com.seclab.signal;
+package com.seclab.signal.UltraSonic;
 
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintStream;
-import java.util.Arrays;
 
 import android.content.Context;
-import android.content.Intent;
 import android.media.AudioAttributes;
 import android.media.AudioFormat;
 import android.media.AudioManager;
@@ -19,12 +14,9 @@ import android.media.AudioRecord;
 import android.media.AudioTimestamp;
 import android.media.AudioTrack;
 import android.media.MediaRecorder.AudioSource;
-import android.media.MediaScannerConnection;
 import android.os.Build;
 import android.os.Environment;
 import android.util.Log;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import com.seclab.signal.DSP.DSP;
 
@@ -117,7 +109,7 @@ public class Sonar extends Thread {
             recorder.startRecording();
             for (int i=0; i<1; ++i) {
                 track.write(pulse, 0, pulse.length);
-                Log.i("Sonar", "Time = " + System.currentTimeMillis());
+                Log.i("Sonar", "Time = " + System.nanoTime());
                 track.play();
                 sleep(1000);
             }
@@ -163,7 +155,7 @@ public class Sonar extends Thread {
                             short[] buffer = new short[bufferSize];
                             try {
                                 recorder.startRecording();
-                                long timeStamp = System.currentTimeMillis();
+                                long timeStamp = System.nanoTime();
                                 recorder.read(buffer, 0, buffer.length);
                                 Result res = FilterAndClean.DistanceSingle(buffer, pulse, sampleRate, threshold, maxDistanceMeters, deadZoneLength, thresholdPeak, 0, timeStamp);
                                 if (buffer.length == 0)
