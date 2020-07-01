@@ -1,6 +1,7 @@
 package com.seclab.signal;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.le.AdvertiseCallback;
 import android.bluetooth.le.AdvertiseData;
@@ -96,6 +97,7 @@ public class MainActivity extends AppCompatActivity {
 
         stopBtn.setOnClickListener(new View.OnClickListener() {
             @Override
+            @TargetApi(26)
             public void onClick(View v) {
                 Log.i(TAG, "Stop Advertising!");
                 advertiser.stopAdvertisingSet(new AdvertisingSetCallback() {
@@ -139,9 +141,59 @@ public class MainActivity extends AppCompatActivity {
 
     public void advertise() {
 
+
+
+        AdvertiseSettings settings = new AdvertiseSettings.Builder()
+        .setAdvertiseMode( AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY )
+        .setTxPowerLevel( AdvertiseSettings.ADVERTISE_TX_POWER_HIGH )
+        .setConnectable(false)
+        .build();
+
+        ParcelUuid pUuid = new ParcelUuid( UUID.fromString("5921174c-bb48-11ea-b3de-0242ac130004"));
+
+
+        boolean includeDeviceName = true;
+
+        boolean includeTxPower = false;
+
+        AdvertiseData advertiseData = new AdvertiseData.Builder()
+                .setIncludeDeviceName( includeDeviceName )
+                .setIncludeTxPowerLevel(includeTxPower )
+                .addServiceUuid( pUuid )
+//                .addServiceData( pUuid, "Data".getBytes(Charset.forName("UTF-8") ) )
+                .build();
+
+
+        AdvertiseCallback advertisingCallback = new AdvertiseCallback() {
+            @Override
+            public void onStartSuccess(AdvertiseSettings settingsInEffect) {
+                super.onStartSuccess(settingsInEffect);
+                Log.i("BLE", "LE Advertise success.");
+
+            }
+
+            @Override
+            public void onStartFailure(int errorCode) {
+                Log.e("BLE", "Advertising onStartFailure: " + errorCode);
+                super.onStartFailure(errorCode);
+            }
+        };
+
+        advertiser.startAdvertising(settings, advertiseData, advertisingCallback);
+
+        Log.i(TAG, "Advertising started");
+    }
+
+
+    @TargetApi(26)
+    public void advertiseCustom() {
+
+
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
         adapter.setName("Test Signal");
         advertiser = adapter.getBluetoothLeAdvertiser();
+
+
 
         // int txpower = -15;   // low
         // int txpower = -7;    // medium
@@ -217,32 +269,7 @@ public class MainActivity extends AppCompatActivity {
                 null, duration, 0, callback);
 
 
-//        AdvertiseSettings settings = new AdvertiseSettings.Builder()
-//                .setAdvertiseMode( AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY )
-//                .setTxPowerLevel( AdvertiseSettings.ADVERTISE_TX_POWER_HIGH )
-//                .setConnectable(true)
-//                .build();
-//
-//
-//
-//        AdvertiseCallback advertisingCallback = new AdvertiseCallback() {
-//            @Override
-//            public void onStartSuccess(AdvertiseSettings settingsInEffect) {
-//                super.onStartSuccess(settingsInEffect);
-//                Log.i("BLE", "LE Advertise success.");
-//
-//            }
-//
-//            @Override
-//            public void onStartFailure(int errorCode) {
-//                Log.e("BLE", "Advertising onStartFailure: " + errorCode);
-//                super.onStartFailure(errorCode);
-//            }
-//        };
-//
-//        advertiser.startAdvertising(settings, advertiseData, advertisingCallback);
-
-        Log.i(TAG, "Advertising started");
+        Log.i(TAG, "Custom Advertising started");
 
     }
 
