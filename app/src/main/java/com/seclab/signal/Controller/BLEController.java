@@ -10,6 +10,7 @@ import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattServerCallback;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.AdvertiseCallback;
 import android.bluetooth.le.AdvertiseData;
 import android.bluetooth.le.AdvertiseSettings;
@@ -23,6 +24,8 @@ import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.ParcelUuid;
 import android.util.Log;
 
@@ -44,6 +47,9 @@ public class BLEController {
     public String DEVICE_NAME = "Test";
     public BluetoothLeScanner scanner;
     public Context context;
+    public BluetoothGatt receiver;
+
+    public boolean connected = false;
 
     public long latestTime = 0;
     public SonarController sonarController;
@@ -82,6 +88,7 @@ public class BLEController {
             @Override
             public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattCharacteristic characteristic) {
                 super.onCharacteristicReadRequest(device, requestId, offset, characteristic);
+                sonarController.startSonar();
             }
         });
 
@@ -98,21 +105,54 @@ public class BLEController {
 
         ScanCallback callback = new ScanCallback() {
             @Override
-            public void onScanResult(int callbackType, ScanResult result) {
-                latestTime = System.nanoTime();
+            public void onScanResult(int callbackType, final ScanResult result) {
+                super.onScanResult(callbackType, result);
 
                 // discover device, connect
-                result.getDevice().connectGatt(context, true, new BluetoothGattCallback() {
+                result.getDevice().connectGatt(context, false, new BluetoothGattCallback() {
                     @Override
-                    public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-                        super.onCharacteristicRead(gatt, characteristic, status);
-                        // sonar play
-                        sonarController.startSonar();
+                    public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+
+                        super.onConnectionStateChange(gatt, status, newState);
+
+                        if (!connected) {
+
+                            connected = true;
+
+                            // connected
+                            Log.i(TAG, "Connected to: " + result.getDevice().getName());
+                            // try to discover service
+
+                            if (status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothProfile.STATE_CONNECTED) {
+                                gatt.discoverServices();
+                            }
+                        }
+
+                    }
+
+                    @Override
+                    public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+                        super.onServicesDiscovered(gatt, status);
+                        Log.i(TAG, "onServicesDiscovered");
+
+                        List<BluetoothGattService> services = gatt.getServices();
+                        for (BluetoothGattService service: services) {
+                            if (service.getUuid().toString().equalsIgnoreCase(DEFAULT_UUID)) {
+                                // target service discovered
+                                for (BluetoothGattCharacteristic c: service.getCharacteristics()) {
+                                    if (c.getUuid().toString().equalsIgnoreCase(Characteristic_UUID)) {
+                                        // target characteristic discovered
+                                        gatt.readCharacteristic(c);
+                                        byte[] val = c.getValue();
+                                        latestTime = System.nanoTime();
+                                        Log.i(TAG, "Target characteristic discovered, " + "\tTime = " + latestTime);
+                                    }
+                                }
+                            }
+                        }
                     }
                 });
 
-                Log.i(TAG, "onScanResult, Time=" + latestTime);
-                super.onScanResult(callbackType, result);
             }
 
             @Override
@@ -128,6 +168,7 @@ public class BLEController {
                 super.onScanFailed(errorCode);
             }
         };
+
 
         scanner.startScan(scanFilter, settings, callback);
     }
