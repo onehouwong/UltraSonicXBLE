@@ -69,9 +69,12 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
+        final SonarController sonarController = new SonarController(this.getApplicationContext());
+        final BLEController bleController = new BLEController(this.getApplicationContext(), sonarController);
+
+
 
         // BLE
-        final BLEController bleController = new BLEController();
         Button startBtn = findViewById(R.id.start);
         Button stopBtn = findViewById(R.id.stop);
         Button scanBtn = findViewById(R.id.scan);
@@ -106,7 +109,6 @@ public class MainActivity extends AppCompatActivity {
         Button startSonarBtn = findViewById(R.id.startSonar);
         Button readSonarBtn = findViewById(R.id.readSonar);
 
-        final SonarController sonarController = new SonarController(this.getApplicationContext());
 
         startSonarBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -130,16 +132,16 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                sonarController.startSonar();
                 bleController.advertise();
+                sonarController.startSonar();
 
                 // sleep one second
-                try {
-                    Thread.sleep(1000);
-                }
-                catch(InterruptedException e) {
-                    e.printStackTrace();
-                }
+//                try {
+//                    Thread.sleep(1000);
+//                }
+//                catch(InterruptedException e) {
+//                    e.printStackTrace();
+//                }
             }
         });
 

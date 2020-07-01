@@ -2,6 +2,14 @@ package com.seclab.signal.Controller;
 
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattServer;
+import android.bluetooth.BluetoothGattServerCallback;
+import android.bluetooth.BluetoothGattService;
+import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.AdvertiseCallback;
 import android.bluetooth.le.AdvertiseData;
 import android.bluetooth.le.AdvertiseSettings;
@@ -14,8 +22,11 @@ import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
+import android.content.Context;
 import android.os.ParcelUuid;
 import android.util.Log;
+
+import com.seclab.signal.UltraSonic.Sonar;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,17 +37,55 @@ public class BLEController {
     private String TAG = "BLEController";
     public BluetoothLeAdvertiser advertiser;
     public String DEFAULT_UUID = "5921174c-bb48-11ea-b3de-0242ac130004";
-    public String DEVICE_NAME = "Test Signal";
+    public String Characteristic_UUID = "5921174c-bb48-11ea-b3de-0242ac130001";
+    public BluetoothGattServer bluetoothGattServer;
+
+
+    public String DEVICE_NAME = "Test";
     public BluetoothLeScanner scanner;
+    public Context context;
 
     public long latestTime = 0;
+    public SonarController sonarController;
 
 
-    public BLEController() {
+    public BLEController(Context c, SonarController sc) {
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
         adapter.setName(DEVICE_NAME);
         advertiser = adapter.getBluetoothLeAdvertiser();
         scanner = adapter.getBluetoothLeScanner();
+        context = c;
+        sonarController = sc;
+
+        initGATT();
+    }
+
+    public void initGATT() {
+        BluetoothGattService service = new BluetoothGattService(UUID.fromString(DEFAULT_UUID), 0);
+        BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(UUID.fromString(Characteristic_UUID),  18, 1);
+        characteristic.setValue("Test");
+
+        service.addCharacteristic(characteristic);
+
+        BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(context.BLUETOOTH_SERVICE);
+        bluetoothGattServer = bluetoothManager.openGattServer(context, new BluetoothGattServerCallback() {
+            @Override
+            public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
+                super.onConnectionStateChange(device, status, newState);
+            }
+
+            @Override
+            public void onServiceAdded(int status, BluetoothGattService service) {
+                super.onServiceAdded(status, service);
+            }
+
+            @Override
+            public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattCharacteristic characteristic) {
+                super.onCharacteristicReadRequest(device, requestId, offset, characteristic);
+            }
+        });
+
+        bluetoothGattServer.addService(service);
     }
 
     // scanning
@@ -51,6 +100,17 @@ public class BLEController {
             @Override
             public void onScanResult(int callbackType, ScanResult result) {
                 latestTime = System.nanoTime();
+
+                // discover device, connect
+                result.getDevice().connectGatt(context, true, new BluetoothGattCallback() {
+                    @Override
+                    public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+                        super.onCharacteristicRead(gatt, characteristic, status);
+                        // sonar play
+                        sonarController.startSonar();
+                    }
+                });
+
                 Log.i(TAG, "onScanResult, Time=" + latestTime);
                 super.onScanResult(callbackType, result);
             }
@@ -79,8 +139,8 @@ public class BLEController {
         AdvertiseSettings settings = new AdvertiseSettings.Builder()
                 .setAdvertiseMode( AdvertiseSettings.ADVERTISE_MODE_LOW_POWER )
                 .setTxPowerLevel( AdvertiseSettings.ADVERTISE_TX_POWER_HIGH )
-                .setConnectable(false)
-                .setTimeout(1000)
+                .setConnectable(true)
+//                .setTimeout(1000)
                 .build();
 
         ParcelUuid pUuid = new ParcelUuid( UUID.fromString(DEFAULT_UUID));

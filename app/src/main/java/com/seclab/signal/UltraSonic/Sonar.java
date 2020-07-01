@@ -17,6 +17,7 @@ import android.media.MediaRecorder.AudioSource;
 import android.os.Build;
 import android.os.Environment;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.seclab.signal.DSP.DSP;
 
@@ -109,14 +110,14 @@ public class Sonar extends Thread {
             recorder.startRecording();
             for (int i=0; i<1; ++i) {
                 track.write(pulse, 0, pulse.length);
-                Log.i("Sonar", "Time = " + System.nanoTime());
+//                Log.i("Sonar", "Time = " + System.nanoTime());
                 track.play();
-                sleep(1000);
+//                sleep(1000);
             }
             recorder.read(buffer, 0, buffer.length);
 
         }
-        catch (InterruptedException e) {
+        catch (Exception e) {
 
         }
         finally {
@@ -159,8 +160,10 @@ public class Sonar extends Thread {
                                 recorder.read(buffer, 0, buffer.length);
                                 Result res = FilterAndClean.DistanceSingle(buffer, pulse, sampleRate, threshold, maxDistanceMeters, deadZoneLength, thresholdPeak, 0, timeStamp);
 
-                                if (res.elapseTime != 0)
+                                if (res.elapseTime != 0) {
+//                                    Toast.makeText(context, "Time: " + res.timeStamp, Toast.LENGTH_LONG).show();
                                     Log.i("Sonar", "Time: " + res.timeStamp);
+                                }
 
                             }catch(Exception e){
                                 e.printStackTrace();

@@ -214,9 +214,9 @@ public class FilterAndClean {
                 / ((double) sampleRate);
         double Value2 = Math.abs(absInvZ[secondIndex]);
 
-        Log.i("Sonar", t1 + " " + t2);
+//        Log.i("Sonar", t1 + " " + t2);
         long elapse_time = (long) Math.ceil((t2 - t1) * 1000);
-        long ts = elapse_time + timeStamp;
+        long ts = elapse_time * 1000000 + timeStamp;
 
         return new Result((t2 - t1) * soundSpeed / (double) (2), Value2,
                 signal, absInvZ, elapse_time, ts);
