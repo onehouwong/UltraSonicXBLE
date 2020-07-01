@@ -9,9 +9,16 @@ import android.bluetooth.le.AdvertisingSet;
 import android.bluetooth.le.AdvertisingSetCallback;
 import android.bluetooth.le.AdvertisingSetParameters;
 import android.bluetooth.le.BluetoothLeAdvertiser;
+import android.bluetooth.le.BluetoothLeScanner;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanFilter;
+import android.bluetooth.le.ScanResult;
+import android.bluetooth.le.ScanSettings;
 import android.os.ParcelUuid;
 import android.util.Log;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class BLEController {
@@ -20,14 +27,53 @@ public class BLEController {
     public BluetoothLeAdvertiser advertiser;
     public String DEFAULT_UUID = "5921174c-bb48-11ea-b3de-0242ac130004";
     public String DEVICE_NAME = "Test Signal";
+    public BluetoothLeScanner scanner;
+
+    public long latestTime = 0;
 
 
     public BLEController() {
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
         adapter.setName(DEVICE_NAME);
         advertiser = adapter.getBluetoothLeAdvertiser();
+        scanner = adapter.getBluetoothLeScanner();
     }
 
+    // scanning
+    public void scan() {
+        List<ScanFilter> scanFilter = new ArrayList<>();
+        scanFilter.add(new ScanFilter.Builder().setServiceUuid(ParcelUuid.fromString(DEFAULT_UUID)).build());
+
+        ScanSettings settings = new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build();
+
+
+        ScanCallback callback = new ScanCallback() {
+            @Override
+            public void onScanResult(int callbackType, ScanResult result) {
+                latestTime = System.nanoTime();
+                Log.i(TAG, "onScanResult, Time=" + latestTime);
+                super.onScanResult(callbackType, result);
+            }
+
+            @Override
+            public void onBatchScanResults(List<ScanResult> results) {
+                latestTime = System.nanoTime();
+                Log.i(TAG, "onBatchScanResults, Time=" + latestTime);
+                super.onBatchScanResults(results);
+            }
+
+            @Override
+            public void onScanFailed(int errorCode) {
+                Log.i(TAG, "onScanFailed");
+                super.onScanFailed(errorCode);
+            }
+        };
+
+        scanner.startScan(scanFilter, settings, callback);
+    }
+
+
+    // advertising
     public void advertise() {
 
         AdvertiseSettings settings = new AdvertiseSettings.Builder()

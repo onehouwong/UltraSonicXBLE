@@ -1,18 +1,7 @@
 package com.seclab.signal;
 
 import android.Manifest;
-import android.annotation.TargetApi;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.le.AdvertiseCallback;
-import android.bluetooth.le.AdvertiseData;
-import android.bluetooth.le.AdvertiseSettings;
-import android.bluetooth.le.AdvertisingSet;
-import android.bluetooth.le.AdvertisingSetCallback;
-import android.bluetooth.le.AdvertisingSetParameters;
-import android.bluetooth.le.BluetoothLeAdvertiser;
-import android.content.Context;
 import android.content.pm.PackageManager;
-import android.media.AudioRecord;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -20,27 +9,16 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.seclab.signal.Controller.BLEController;
 import com.seclab.signal.Controller.SonarController;
-import com.seclab.signal.UltraSonic.Result;
-import com.seclab.signal.UltraSonic.Sonar;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.PermissionChecker;
 
-import android.os.Handler;
-import android.os.ParcelUuid;
-import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import android.widget.Button;
-import android.widget.Toast;
-
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.UUID;
-
 
 public class MainActivity extends AppCompatActivity {
 
@@ -67,14 +45,26 @@ public class MainActivity extends AppCompatActivity {
 
         // check permission
         int permission;
-        if (Build.VERSION.SDK_INT < 26)
+        if (Build.VERSION.SDK_INT < 23) {
             permission = PermissionChecker.checkSelfPermission(this.getApplicationContext(), Manifest.permission.RECORD_AUDIO);
-        else {
-            if (this.checkSelfPermission(Manifest.permission.RECORD_AUDIO)
-                    != PackageManager.PERMISSION_GRANTED) {
+            permission = PermissionChecker.checkSelfPermission(this.getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION);
+            permission = PermissionChecker.checkSelfPermission(this.getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION);
 
+        }
+        else {
+            if (this.checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                 this.requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO},
                         123);
+            }
+
+            if (this.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                this.requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        456);
+            }
+
+            if (this.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                this.requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                        789);
             }
         }
 
@@ -84,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
         final BLEController bleController = new BLEController();
         Button startBtn = findViewById(R.id.start);
         Button stopBtn = findViewById(R.id.stop);
+        Button scanBtn = findViewById(R.id.scan);
 
 
         startBtn.setOnClickListener(new View.OnClickListener() {
@@ -99,6 +90,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 bleController.stopAdvertising();
+            }
+        });
+
+        scanBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                bleController.scan();
             }
         });
 

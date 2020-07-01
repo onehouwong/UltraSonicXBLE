@@ -46,6 +46,16 @@
 
 
         <Button
+            android:id="@+id/scan"
+            style="@style/Widget.AppCompat.Button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="40sp"
+            android:text="Start Scanning!" />
+
+
+        <Button
             android:id="@+id/startSonar"
             style="@style/Widget.AppCompat.Button"
             android:layout_width="wrap_content"
