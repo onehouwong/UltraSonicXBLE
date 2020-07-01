@@ -109,11 +109,11 @@ public class FilterAndClean {
                 / ((double) sampleRate);
         double t2 = ((double) (secondIndex) - (double) (lenInvZ) / (double) (2))
                 / ((double) sampleRate);
-        Log.i("Sonar", firstIndex + " " + secondIndex);
-        Log.i("Sonar", t1 + " " + t2);
+//        Log.i("Sonar", firstIndex + " " + secondIndex);
+//        Log.i("Sonar", t1 + " " + t2);
         double Value2 = Math.abs(absInvZ[secondIndex]);
         return new Result((t2 - t1) * soundSpeed / (double) (2), Value2,
-                signal, absInvZ);
+                signal, absInvZ, 0, 0);
     }
 
 
@@ -214,11 +214,12 @@ public class FilterAndClean {
                 / ((double) sampleRate);
         double Value2 = Math.abs(absInvZ[secondIndex]);
 
-//        Log.i("Sonar", t1 + " " + t2);
-        long elapse_time = (long) Math.ceil((t2 - t1) * 1000) + timeStamp;
-        Log.i("Sonar", "Time: " + elapse_time + " " + timeStamp);
+        Log.i("Sonar", t1 + " " + t2);
+        long elapse_time = (long) Math.ceil((t2 - t1) * 1000);
+        long ts = elapse_time + timeStamp;
+
         return new Result((t2 - t1) * soundSpeed / (double) (2), Value2,
-                signal, absInvZ);
+                signal, absInvZ, elapse_time, ts);
     }
 
 

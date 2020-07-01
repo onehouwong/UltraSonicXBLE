@@ -62,7 +62,7 @@ public class SonarController {
         sonsys.run();
 
         String distanceMeters = df.format(sonsys.result.distance);
-        Log.i(TAG, "Distance=" + distanceMeters);
+//        Log.i(TAG, "Distance=" + distanceMeters);
         Toast.makeText(context, "Distance=" + distanceMeters, Toast.LENGTH_SHORT).show();
 
 

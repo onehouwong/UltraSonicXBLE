@@ -124,6 +124,26 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
+        // play
+        Button ganBtn = findViewById(R.id.play);
+        ganBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                sonarController.startSonar();
+                bleController.advertise();
+
+                // sleep one second
+                try {
+                    Thread.sleep(1000);
+                }
+                catch(InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+
     }
 
 

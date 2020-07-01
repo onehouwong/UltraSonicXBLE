@@ -158,11 +158,10 @@ public class Sonar extends Thread {
                                 long timeStamp = System.nanoTime();
                                 recorder.read(buffer, 0, buffer.length);
                                 Result res = FilterAndClean.DistanceSingle(buffer, pulse, sampleRate, threshold, maxDistanceMeters, deadZoneLength, thresholdPeak, 0, timeStamp);
-                                if (buffer.length == 0)
-                                    Log.i("Sonar", "Receive: Buffer=null");
-                                else {
-                                    Log.i("Sonar", "Receive: " + res.distance);
-                                }
+
+                                if (res.elapseTime != 0)
+                                    Log.i("Sonar", "Time: " + res.timeStamp);
+
                             }catch(Exception e){
                                 e.printStackTrace();
                             }

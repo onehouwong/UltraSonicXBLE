@@ -77,9 +77,10 @@ public class BLEController {
     public void advertise() {
 
         AdvertiseSettings settings = new AdvertiseSettings.Builder()
-                .setAdvertiseMode( AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY )
+                .setAdvertiseMode( AdvertiseSettings.ADVERTISE_MODE_LOW_POWER )
                 .setTxPowerLevel( AdvertiseSettings.ADVERTISE_TX_POWER_HIGH )
                 .setConnectable(false)
+                .setTimeout(1000)
                 .build();
 
         ParcelUuid pUuid = new ParcelUuid( UUID.fromString(DEFAULT_UUID));
