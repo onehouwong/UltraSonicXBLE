@@ -6,16 +6,18 @@ public class Result {
     public double xcorrHeight;
     public short[] signal;
     public double[] xcorr;
-    public long timeStamp;
-    public long elapseTime;
+    public double timeStamp;
+    public double elapseTime;
+    public int peakIndex;
 
 
-    public Result(double distance, double xcorrHeight, short[] signal, double[] xcorr, long elapseTime, long timeStamp){
+    public Result(double distance, double xcorrHeight, short[] signal, double[] xcorr, double elapseTime, double timeStamp, int peakIndex){
         this.distance = distance;
         this.xcorrHeight = xcorrHeight;
         this.signal = signal;
         this.xcorr = xcorr;
         this.elapseTime = elapseTime;
         this.timeStamp = timeStamp;
+        this.peakIndex = peakIndex;
     }
 }

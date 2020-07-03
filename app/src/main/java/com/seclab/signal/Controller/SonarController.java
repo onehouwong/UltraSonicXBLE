@@ -81,15 +81,7 @@ public class SonarController {
 //        String distanceMeters = df.format(sonsys.result.distance);
 //        Log.i(TAG, "Distance=" + distanceMeters);
 
-//        sonsys = new Sonar(thresholdPeak, this.getApplicationContext());
-//        sonsys.listenToSonar();
-
-
-        try {
-            sonsys.scheduleSensing();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+         sonsys.scheduleSensing();
 
 //        result = getResult();
 //        Log.i(TAG, "Distance=" + result.distance);

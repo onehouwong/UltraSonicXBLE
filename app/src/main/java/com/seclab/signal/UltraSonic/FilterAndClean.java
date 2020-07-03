@@ -14,7 +14,8 @@ import java.util.Arrays;
 public class FilterAndClean {
     public static double soundSpeed = 346.65; // Speed of sound in air
     public static double peakThreshold = 22000000000.0;
-    public static double multiple = 1000000000.0;
+//    public static double multiple = 1000000000.0;
+    public static double multiple = 100000000.0;
     public static Complex[] cachedPulse = null;
     public static int sharpness = 1;
 
@@ -113,7 +114,7 @@ public class FilterAndClean {
 //        Log.i("Sonar", t1 + " " + t2);
         double Value2 = Math.abs(absInvZ[secondIndex]);
         return new Result((t2 - t1) * soundSpeed / (double) (2), Value2,
-                signal, absInvZ, 0, 0);
+                signal, absInvZ, 0, 0, 0);
     }
 
 
@@ -124,6 +125,8 @@ public class FilterAndClean {
 
         soundSpeed = 331 + 0.6*15;//331 + 0.6*(double)tempature;
         peakThreshold = pthreshold * multiple;
+
+        int originalLength = signal.length;
         // Preprocessing for speed
         // strip out first set of zeros. This deals with concurrency issue
         // between the recording buffer and the play buffer
@@ -133,6 +136,10 @@ public class FilterAndClean {
                 break;
             }
         }
+
+        if (startIndex != signal.length)
+            System.out.println();
+
         int samplesPerMeter = (int)(sampleRate / soundSpeed); // seed of sound is 330 meters
         // per second in air.
         int maxSamples =(int) (samplesPerMeter * maxDistanceMeters * 2); // We
@@ -205,21 +212,43 @@ public class FilterAndClean {
             secondIndex = peaks[0];
         }
 
-        firstIndex = 0;
+        firstIndex = 0; // start of buffer
 
-        // buffer_start  -  t1  - t2
-        double t1 = ((double) (firstIndex) - (double) (lenInvZ) / (double) (2))
-                / ((double) sampleRate);
-        double t2 = ((double) (secondIndex) - (double) (lenInvZ) / (double) (2))
-                / ((double) sampleRate);
-        double Value2 = Math.abs(absInvZ[secondIndex]);
+        secondIndex = peaks[0] + startIndex; // index of the peak
 
-//        Log.i("Sonar", t1 + " " + t2);
-        long elapse_time = (long) Math.ceil((t2 - t1) * 1000);
-        long ts = elapse_time * 1000000 + timeStamp;
+        double elapse_time = 0;
+        double t1, t2, Value2;
+
+
+        // make sure the peak value is greater than peak threshold
+        if (absInvZ[secondIndex - startIndex] > peakThreshold) {
+
+            // buffer_start  -  t1  - t2
+            t1 = ((double) (firstIndex) - (double) (lenInvZ) / (double) (2))
+                    / ((double) sampleRate);
+            t2 = ((double) (secondIndex) - (double) (lenInvZ) / (double) (2))
+                    / ((double) sampleRate);
+            Value2 = Math.abs(absInvZ[secondIndex - startIndex]);
+
+            // Log.i("Sonar", t1 + " " + t2);
+
+            elapse_time = (double) secondIndex / (double) sampleRate * 1000000000;
+        }
+        else {
+            t1 = 0;
+            t2 = 0;
+            Value2 = 0;
+            elapse_time = 0;
+        }
+
+//        if (startIndex == originalLength) {
+//            elapse_time = 0;
+//        }
+
+        double ts = elapse_time + timeStamp;
 
         return new Result((t2 - t1) * soundSpeed / (double) (2), Value2,
-                signal, absInvZ, elapse_time, ts);
+                signal, absInvZ, elapse_time, ts, secondIndex);
     }
 
 

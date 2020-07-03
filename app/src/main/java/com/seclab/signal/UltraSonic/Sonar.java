@@ -26,7 +26,7 @@ import com.seclab.signal.DSP.DSP;
  */
 public class Sonar extends Thread {
 
-    public int threshold = 10000;
+    public int threshold = 1000;
     public int thresholdPeak = 0;
     public double maxDistanceMeters = 5;
     private final int sampleRate = 44100;
@@ -49,9 +49,13 @@ public class Sonar extends Thread {
     private Context context;
     private TempSense tempSense;
     AudioRecord recorder;
-    long prev_time;
-    long curr_time;
+    long prev_buffer_cnt = 0;
+    long curr_buffer_cnt = 0;
+
+    long prev_peak_cnt = 0;
+    long curr_peak_cnt = 0;
     AudioTimestamp at;
+
     /**
      * Give the thread high priority so that it's not canceled unexpectedly, and
      * start it
@@ -114,7 +118,7 @@ public class Sonar extends Thread {
                 track.play();
 //                sleep(1000);
             }
-            recorder.read(buffer, 0, buffer.length);
+//            recorder.read(buffer, 0, buffer.length);
 
         }
         catch (Exception e) {
@@ -133,7 +137,7 @@ public class Sonar extends Thread {
     }
 
 
-    public void scheduleSensing() throws InterruptedException
+    public void scheduleSensing()
     {
         if (recorder == null) {
             recorder = new AudioRecord(AudioSource.MIC, receiveRate,
@@ -151,8 +155,10 @@ public class Sonar extends Thread {
                 {
                     @Override
                     public void run() {
+                        int counter = 0;
                         while(true){
 
+                            counter++;
                             short[] buffer = new short[bufferSize];
                             try {
                                 recorder.startRecording();
@@ -161,22 +167,25 @@ public class Sonar extends Thread {
                                 Result res = FilterAndClean.DistanceSingle(buffer, pulse, sampleRate, threshold, maxDistanceMeters, deadZoneLength, thresholdPeak, 0, timeStamp);
 
                                 if (res.elapseTime != 0) {
+                                    prev_buffer_cnt = curr_buffer_cnt;
+                                    curr_buffer_cnt = counter;
+
+                                    prev_peak_cnt = curr_peak_cnt;
+                                    curr_peak_cnt = res.peakIndex;
+
+                                    // calculate time difference
+                                    double sampleNum = (curr_buffer_cnt - prev_buffer_cnt) * bufferSize + (curr_peak_cnt - prev_peak_cnt);
+                                    double diffTime = sampleNum / sampleRate;
+
+//                                    Log.i("Counter", "" + counter + "\tPeak: " + res.peakIndex);
 //                                    Toast.makeText(context, "Time: " + res.timeStamp, Toast.LENGTH_LONG).show();
-                                    Log.i("Sonar", "Time: " + res.timeStamp);
+//                                    Log.i("Sonar", "Time: " + res.timeStamp);
+                                    Log.i("Sonar", "Diff Time: " + diffTime);
                                 }
 
                             }catch(Exception e){
                                 e.printStackTrace();
                             }
-                            // get time between two consecutive read
-//                            recorder.getTimestamp(at, AudioTimestamp.TIMEBASE_BOOTTIME);
-//                            prev_time = curr_time;
-//                            curr_time = at.nanoTime;
-//                            long time_elapse = curr_time - prev_time;
-//
-//                            result = getResult();
-//                            if (result.distance != 1.1)
-//                                Log.i("Sonar", "Distance=" + result.distance + "\tTime=" + time_elapse);
                         }
                     }
                 }

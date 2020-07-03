@@ -43,13 +43,13 @@ public class BLEController {
     public String Characteristic_UUID = "5921174c-bb48-11ea-b3de-0242ac130001";
     public BluetoothGattServer bluetoothGattServer;
 
-
     public String DEVICE_NAME = "Test";
     public BluetoothLeScanner scanner;
     public Context context;
     public BluetoothGatt receiver;
 
     public boolean connected = false;
+    public ROLE role;
 
     public long latestTime = 0;
     public SonarController sonarController;
@@ -88,6 +88,7 @@ public class BLEController {
             @Override
             public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattCharacteristic characteristic) {
                 super.onCharacteristicReadRequest(device, requestId, offset, characteristic);
+                Log.i(TAG, "Characteristic Read Time: " + System.nanoTime());
                 sonarController.startSonar();
             }
         });
@@ -95,13 +96,16 @@ public class BLEController {
         bluetoothGattServer.addService(service);
     }
 
+
+    public ROLE getRole () {return this.role;}
+
+
     // scanning
     public void scan() {
         List<ScanFilter> scanFilter = new ArrayList<>();
         scanFilter.add(new ScanFilter.Builder().setServiceUuid(ParcelUuid.fromString(DEFAULT_UUID)).build());
 
         ScanSettings settings = new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build();
-
 
         ScanCallback callback = new ScanCallback() {
             @Override
@@ -116,16 +120,19 @@ public class BLEController {
                         super.onConnectionStateChange(gatt, status, newState);
 
                         if (!connected) {
-
-                            connected = true;
-
                             // connected
+                            connected = true;
+                            role = ROLE.CENTRAL;
                             Log.i(TAG, "Connected to: " + result.getDevice().getName());
-                            // try to discover service
 
+                            // try to discover service
                             if (status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothProfile.STATE_CONNECTED) {
                                 gatt.discoverServices();
                             }
+                        }
+
+                        if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                            connected = false;
                         }
 
                     }
@@ -142,8 +149,7 @@ public class BLEController {
                                 for (BluetoothGattCharacteristic c: service.getCharacteristics()) {
                                     if (c.getUuid().toString().equalsIgnoreCase(Characteristic_UUID)) {
                                         // target characteristic discovered
-                                        gatt.readCharacteristic(c);
-                                        byte[] val = c.getValue();
+                                        boolean succ = gatt.readCharacteristic(c);
                                         latestTime = System.nanoTime();
                                         Log.i(TAG, "Target characteristic discovered, " + "\tTime = " + latestTime);
                                     }
@@ -176,6 +182,8 @@ public class BLEController {
 
     // advertising
     public void advertise() {
+
+        role = ROLE.PERIPHERAL;
 
         AdvertiseSettings settings = new AdvertiseSettings.Builder()
                 .setAdvertiseMode( AdvertiseSettings.ADVERTISE_MODE_LOW_POWER )
@@ -232,6 +240,7 @@ public class BLEController {
     @TargetApi(26)
     public void advertiseCustom() {
 
+        role = ROLE.PERIPHERAL;
 
         // int txpower = -15;   // low
         // int txpower = -7;    // medium
@@ -327,5 +336,10 @@ public class BLEController {
                 super.onAdvertisingEnabled(advertisingSet, enable, status);
             }
         });
+    }
+
+    public enum ROLE {
+        PERIPHERAL,
+        CENTRAL
     }
 }
