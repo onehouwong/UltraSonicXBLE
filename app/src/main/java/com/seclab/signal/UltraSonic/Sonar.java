@@ -181,6 +181,8 @@ public class Sonar extends Thread {
 //                                    Toast.makeText(context, "Time: " + res.timeStamp, Toast.LENGTH_LONG).show();
 //                                    Log.i("Sonar", "Time: " + res.timeStamp);
                                     Log.i("Sonar", "Diff Time: " + diffTime);
+
+
                                 }
 
                             }catch(Exception e){
