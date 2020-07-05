@@ -32,7 +32,7 @@ import com.seclab.signal.DSP.DSP;
 public class Sonar extends Thread {
 
     public int threshold = 1000;
-    public int thresholdPeak = 0;
+    public int thresholdPeak = 1;
     public double maxDistanceMeters = 5;
     private final int sampleRate = 44100;
     private int receiveRate;
@@ -75,9 +75,8 @@ public class Sonar extends Thread {
      * start it
      *
      */
-    public Sonar(int thresholdPeak, Context context, BLEController bleController) {
+    public Sonar(Context context, BLEController bleController) {
         this.bleController = bleController;
-        this.thresholdPeak = thresholdPeak;
         receiveRate = sampleRate;
         this.context = context;
         this.tempSense = new TempSense(context);

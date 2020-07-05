@@ -28,6 +28,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.ParcelUuid;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.seclab.signal.UltraSonic.Sonar;
 
@@ -69,13 +70,10 @@ public class BLEController {
     }
 
     public void setTimeDiffValue(double t) {
-        Log.i(TAG, "" + t);
 
         BluetoothGattCharacteristic c = receiver.getService(UUID.fromString(DEFAULT_UUID)).getCharacteristic(UUID.fromString(Characteristic_UUID));
         c.setValue("" + t);
         boolean suc = receiver.writeCharacteristic(c);
-
-        Log.i(TAG, "suc = " + suc);
 
 //        if (this.role == ROLE.CENTRAL) {
 //
@@ -179,6 +177,7 @@ public class BLEController {
 
                     double distance = Math.abs(selfDiffTime - peerDiffTime) * soundSpeed / 2;
                     Log.i(TAG, "Distance = " + distance);
+
                 }
             }
         });
@@ -377,7 +376,7 @@ public class BLEController {
 
         boolean includeTxPower = false;
 
-        ParcelUuid pUuid = new ParcelUuid( UUID.fromString("b161c53c-0715-11e6-b512-3e1d05defe78"));
+        ParcelUuid pUuid = new ParcelUuid( UUID.fromString(DEFAULT_UUID));
 
 
         AdvertiseData advertiseData = new AdvertiseData.Builder()

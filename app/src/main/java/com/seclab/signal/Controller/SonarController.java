@@ -27,7 +27,7 @@ public class SonarController {
     private final int sampleRate = 44100;
     private final int phase =0;
     private final int f0 = 3402;//6803;
-    private final int bufferSize = 8000;//32768;
+    private final int bufferSize = 32768;
     private final double threshold =90;
     private final int freq = 20;
     private boolean stopped =false;
@@ -47,7 +47,6 @@ public class SonarController {
 //    public RadarDataSet setComp1;
 
 
-    int thresholdPeak = 0;
     private Context context;
 
     public BLEController bleController;
@@ -68,7 +67,7 @@ public class SonarController {
     public void startSonar() {
 
         if (sonsys == null)
-            sonsys = new Sonar(thresholdPeak, context, bleController);
+            sonsys = new Sonar(context, bleController);
 
         sonsys.run();
 
@@ -87,7 +86,7 @@ public class SonarController {
 
     public void startReceiveSonar() {
 
-        sonsys = new Sonar(thresholdPeak, context, bleController);
+        sonsys = new Sonar(context, bleController);
 
 //        String distanceMeters = df.format(sonsys.result.distance);
 //        Log.i(TAG, "Distance=" + distanceMeters);

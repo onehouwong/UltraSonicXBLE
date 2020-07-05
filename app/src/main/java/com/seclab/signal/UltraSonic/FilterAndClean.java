@@ -17,7 +17,7 @@ public class FilterAndClean {
     public static double soundSpeed = 346.65; // Speed of sound in air
     public static double peakThreshold = 22000000000.0;
 //    public static double multiple = 1000000000.0;
-    public static double multiple = 100000000.0;
+    public static double multiple = 1000000000.0;
     public static Complex[] cachedPulse = null;
     public static int sharpness = 1;
     public static int tThreshold = 2;
@@ -223,7 +223,7 @@ public class FilterAndClean {
         }
 
 
-        int w0 = 100;
+        int w0 = 30;
 
         // L2S
         List<Double> l2s = new ArrayList<>();
@@ -270,6 +270,7 @@ public class FilterAndClean {
         // make sure the peak value is greater than peak threshold
         if (absInvZ[secondIndex - startIndex] > peakThreshold) {
 
+//            Log.i("Peak", "" + absInvZ[secondIndex - startIndex]);
 //            Log.i("Norm", "" + d);
 
             // buffer_start  -  t1  - t2
