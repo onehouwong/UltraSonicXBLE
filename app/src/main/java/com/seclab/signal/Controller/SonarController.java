@@ -50,14 +50,25 @@ public class SonarController {
     int thresholdPeak = 0;
     private Context context;
 
+    public BLEController bleController;
+
 
     public SonarController(Context c) {
         context = c;
     }
 
+    public void setBLEController(BLEController bleController) {
+        this.bleController = bleController;
+    }
+
+    public Sonar getSonsys() {
+        return sonsys;
+    }
+
     public void startSonar() {
 
-        sonsys = new Sonar(thresholdPeak, context);
+        if (sonsys == null)
+            sonsys = new Sonar(thresholdPeak, context, bleController);
 
         sonsys.run();
 
@@ -76,7 +87,7 @@ public class SonarController {
 
     public void startReceiveSonar() {
 
-        sonsys = new Sonar(thresholdPeak, context);
+        sonsys = new Sonar(thresholdPeak, context, bleController);
 
 //        String distanceMeters = df.format(sonsys.result.distance);
 //        Log.i(TAG, "Distance=" + distanceMeters);

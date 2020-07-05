@@ -72,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
         final SonarController sonarController = new SonarController(this.getApplicationContext());
         final BLEController bleController = new BLEController(this.getApplicationContext(), sonarController);
 
+        sonarController.setBLEController(bleController);
 
 
         // BLE

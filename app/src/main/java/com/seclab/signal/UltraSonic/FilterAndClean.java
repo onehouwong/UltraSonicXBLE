@@ -8,7 +8,9 @@ import android.util.Log;
 import com.seclab.signal.DSP.Complex;
 import com.seclab.signal.DSP.FFT;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 
 public class FilterAndClean {
@@ -18,6 +20,7 @@ public class FilterAndClean {
     public static double multiple = 100000000.0;
     public static Complex[] cachedPulse = null;
     public static int sharpness = 1;
+    public static int tThreshold = 2;
 
     @TargetApi(Build.VERSION_CODES.GINGERBREAD)
     public static Result Distance(short[] signal, short[] pulse,
@@ -82,6 +85,7 @@ public class FilterAndClean {
         Complex[] invZ = FFT.fftShift(FFT.ifft(ZH)); // Check for absolute and
         // shifting.
 
+
         // Make all the elements abs valued.
         int lenInvZ = invZ.length;
         double[] absInvZ = new double[lenInvZ];
@@ -91,7 +95,8 @@ public class FilterAndClean {
         // double[] absInvZ = CrossCorr(signal, pulse) ;
         // int lenInvZ = absInvZ.length;
 
-        double[] absXcorr = absInvZ.clone();
+        // double[] absXcorr = absInvZ.clone();
+
 
         // Remove the dead zone
         // int firstIndex = getMaxIndex(absInvZ);
@@ -121,7 +126,7 @@ public class FilterAndClean {
     @TargetApi(Build.VERSION_CODES.GINGERBREAD)
     public static Result DistanceSingle(short[] signal, short[] pulse,
                                   int sampleRate, double threshold, double maxDistanceMeters,
-                                  int deadZoneLenght, int pthreshold, float tempature, long timeStamp) {
+                                  int deadZoneLenght, int pthreshold, int numSamples, float tempature, long timeStamp) {
 
         soundSpeed = 331 + 0.6*15;//331 + 0.6*(double)tempature;
         peakThreshold = pthreshold * multiple;
@@ -196,7 +201,12 @@ public class FilterAndClean {
         // double[] absInvZ = CrossCorr(signal, pulse) ;
         // int lenInvZ = absInvZ.length;
 
-        double[] absXcorr = absInvZ.clone();
+        // double[] absXcorr = absInvZ.clone();
+
+        // cross correlation
+        double[] absXcorr = CrossCorr(signal, pulse);
+
+
 
         // Remove the dead zone
         // int firstIndex = getMaxIndex(absInvZ);
@@ -212,6 +222,42 @@ public class FilterAndClean {
             secondIndex = peaks[0];
         }
 
+
+        int w0 = 100;
+
+        // L2S
+        List<Double> l2s = new ArrayList<>();
+        for (int s = firstIndex - w0/2 ; s < firstIndex + w0/2; ++s) {
+            try {
+                l2s.add(absXcorr[s]);
+            } catch (ArrayIndexOutOfBoundsException e) {
+                l2s.clear();
+                break;
+            }
+        }
+        double l1 = norm(l2s);
+
+        // L2N
+        List<Double> l2n = new ArrayList<>();
+        for (int s = firstIndex - numSamples - w0 ; s < firstIndex - numSamples; ++s) {
+            try {
+                l2n.add(absXcorr[s]);
+            } catch (ArrayIndexOutOfBoundsException e) {
+                l2n.clear();
+                break;
+            }
+        }
+        double l2 = norm(l2n);
+
+        double d = 0;
+        if (l2 == 0 && l1 != 0) {
+            d = 0;
+        }
+        else {
+            d = l1 / l2;
+        }
+
+
         firstIndex = 0; // start of buffer
 
         secondIndex = peaks[0] + startIndex; // index of the peak
@@ -220,8 +266,11 @@ public class FilterAndClean {
         double t1, t2, Value2;
 
 
+
         // make sure the peak value is greater than peak threshold
         if (absInvZ[secondIndex - startIndex] > peakThreshold) {
+
+//            Log.i("Norm", "" + d);
 
             // buffer_start  -  t1  - t2
             t1 = ((double) (firstIndex) - (double) (lenInvZ) / (double) (2))
@@ -249,6 +298,18 @@ public class FilterAndClean {
 
         return new Result((t2 - t1) * soundSpeed / (double) (2), Value2,
                 signal, absInvZ, elapse_time, ts, secondIndex);
+    }
+
+
+    public static double norm(List<Double> w2v){
+        if (w2v.size() == 0)
+            return 0;
+        double norm = 0.0;
+        for(Double x: w2v){
+            norm += x*x;
+        }
+        norm = Math.sqrt(norm);
+        return norm;
     }
 
 
@@ -316,14 +377,21 @@ public class FilterAndClean {
         return peaks;
 
     }
-    /*
-     * //This method calculate public static double[] CrossCorr(short[] signal,
-     * short[] pulse){ double[] xcorrR = new double[signal.length+pulse.length];
-     * for(int i=0; i<xcorrR.length; i++ ){ int sum =0; for(int j=0;
-     * j<pulse.length; j++){ if(i+j<signal.length){ sum+= signal[i+j]*pulse[j];
-     * } } xcorrR[i] = Math.abs(sum); }
-     *
-     * return xcorrR; }
-     */
+
+     //This method calculate cross correlation
+     public static double[] CrossCorr(short[] signal, short[] pulse){
+
+        double[] xcorrR = new double[signal.length+pulse.length];
+        for(int i=0; i<xcorrR.length; i++ ){
+            int sum =0;
+            for(int j=0; j<pulse.length; j++){
+                if (i+j<signal.length){
+                    sum+= signal[i+j]*pulse[j];
+                }
+            }
+            xcorrR[i] = Math.abs(sum);
+        }
+     return xcorrR;
+    }
 
 }

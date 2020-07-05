@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.media.AudioAttributes;
 import android.media.AudioFormat;
@@ -16,9 +17,13 @@ import android.media.AudioTrack;
 import android.media.MediaRecorder.AudioSource;
 import android.os.Build;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.seclab.signal.Controller.BLEController;
 import com.seclab.signal.DSP.DSP;
 
 /*
@@ -49,6 +54,8 @@ public class Sonar extends Thread {
     private Context context;
     private TempSense tempSense;
     AudioRecord recorder;
+    AudioTrack track;
+    short[] pulse;
     long prev_buffer_cnt = 0;
     long curr_buffer_cnt = 0;
 
@@ -56,18 +63,53 @@ public class Sonar extends Thread {
     long curr_peak_cnt = 0;
     AudioTimestamp at;
 
+    Thread listenThread;
+    int flag = 0;
+
+    BLEController bleController;
+
+    public double diffTime;
+
     /**
      * Give the thread high priority so that it's not canceled unexpectedly, and
      * start it
      *
      */
-    public Sonar(int thresholdPeak, Context context) {
+    public Sonar(int thresholdPeak, Context context, BLEController bleController) {
+        this.bleController = bleController;
         this.thresholdPeak = thresholdPeak;
         receiveRate = sampleRate;
         this.context = context;
         this.tempSense = new TempSense(context);
         android.os.Process
                 .setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
+
+        pulse = DSP.ConvertToShort(DSP.padSignal(DSP.HanningWindow(
+                DSP.linearChirp(phase, f0, f1, t1, sampleRate), 0, numSamples),
+                bufferSize, delay));
+
+        recorder = new AudioRecord(AudioSource.MIC, sampleRate,
+                AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT,
+                bufferSize * 2);
+
+        if (Build.VERSION.SDK_INT < 26)
+            track = new AudioTrack(AudioManager.STREAM_MUSIC, sampleRate,
+                    AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT,
+                    bufferSize * 2, AudioTrack.MODE_STREAM);
+        else
+            track = new AudioTrack.Builder()
+                    .setAudioAttributes(new AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_ALARM)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                            .build())
+                    .setAudioFormat(new AudioFormat.Builder()
+                            .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                            .setSampleRate(sampleRate)
+                            .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                            .build())
+                    .setBufferSizeInBytes(bufferSize)
+                    .build();
+
         // start();
     }
 
@@ -75,36 +117,12 @@ public class Sonar extends Thread {
     public void run() {
         this.thresholdPeak = thresholdPeak;
         Log.i("Audio", "Running Audio Thread");
-        AudioTrack track = null;
         short[] buffer = new short[bufferSize];
-        short[] pulse = DSP.ConvertToShort(DSP.padSignal(DSP.HanningWindow(
-                DSP.linearChirp(phase, f0, f1, t1, sampleRate), 0, numSamples),
-                bufferSize, delay));
+
         int ix = 0;
 
         int N = AudioRecord.getMinBufferSize(sampleRate,
                 AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
-        recorder = new AudioRecord(AudioSource.MIC, sampleRate,
-                AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT,
-                bufferSize * 2);
-
-        if (Build.VERSION.SDK_INT < 26)
-            track = new AudioTrack(AudioManager.STREAM_MUSIC, sampleRate,
-                AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT,
-                bufferSize * 2, AudioTrack.MODE_STREAM);
-        else
-            track = new AudioTrack.Builder()
-                .setAudioAttributes(new AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_ALARM)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                        .build())
-                .setAudioFormat(new AudioFormat.Builder()
-                        .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
-                        .setSampleRate(sampleRate)
-                        .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
-                        .build())
-                .setBufferSizeInBytes(bufferSize)
-                .build();
 
 
         track.setVolume(AudioTrack.getMaxVolume());
@@ -125,10 +143,8 @@ public class Sonar extends Thread {
 
         }
         finally {
-//            track.stop();
-//            track.release();
-            recorder.stop();
-            recorder.release();
+//            recorder.stop();
+//            recorder.release();
         }
 
         result = FilterAndClean.Distance(buffer, pulse, sampleRate, threshold,
@@ -150,7 +166,7 @@ public class Sonar extends Thread {
                 DSP.linearChirp(phase, f0, f1, t1, sampleRate), 0, numSamples),
                 bufferSize, delay));
 
-        new Thread(
+        listenThread = new Thread(
                 new Runnable()
                 {
                     @Override
@@ -164,26 +180,41 @@ public class Sonar extends Thread {
                                 recorder.startRecording();
                                 long timeStamp = System.nanoTime();
                                 recorder.read(buffer, 0, buffer.length);
-                                Result res = FilterAndClean.DistanceSingle(buffer, pulse, sampleRate, threshold, maxDistanceMeters, deadZoneLength, thresholdPeak, 0, timeStamp);
+                                Result res = FilterAndClean.DistanceSingle(buffer, pulse, sampleRate, threshold, maxDistanceMeters, deadZoneLength, thresholdPeak, numSamples,0, timeStamp);
 
                                 if (res.elapseTime != 0) {
-                                    prev_buffer_cnt = curr_buffer_cnt;
-                                    curr_buffer_cnt = counter;
+                                        prev_buffer_cnt = curr_buffer_cnt;
+                                        curr_buffer_cnt = counter;
 
-                                    prev_peak_cnt = curr_peak_cnt;
-                                    curr_peak_cnt = res.peakIndex;
+                                        prev_peak_cnt = curr_peak_cnt;
+                                        curr_peak_cnt = res.peakIndex;
 
-                                    // calculate time difference
-                                    double sampleNum = (curr_buffer_cnt - prev_buffer_cnt) * bufferSize + (curr_peak_cnt - prev_peak_cnt);
-                                    double diffTime = sampleNum / sampleRate;
+                                        // calculate time difference
+                                        double sampleNum = (curr_buffer_cnt - prev_buffer_cnt) * bufferSize + (curr_peak_cnt - prev_peak_cnt);
+                                        double diff = sampleNum / sampleRate;
+
 
 //                                    Log.i("Counter", "" + counter + "\tPeak: " + res.peakIndex);
 //                                    Toast.makeText(context, "Time: " + res.timeStamp, Toast.LENGTH_LONG).show();
 //                                    Log.i("Sonar", "Time: " + res.timeStamp);
-                                    Log.i("Sonar", "Diff Time: " + diffTime);
+                                        Log.i("Sonar", "Diff Time: " + diff);
 
 
-                                }
+                                        // play sonar after 2 sec
+                                        if (flag < 1) {
+                                            // first beep
+                                            if (bleController.getRole() == BLEController.ROLE.PERIPHERAL)
+                                                receiverHandler.sendEmptyMessageDelayed(0, 2000);
+                                            ++flag;
+                                        }
+                                        else if (flag == 1) {
+                                            // second beep
+                                            diffTime = diff;
+                                            bleController.setTimeDiffValue(diff);
+                                            ++flag;
+                                        }
+
+                                    }
 
                             }catch(Exception e){
                                 e.printStackTrace();
@@ -191,8 +222,24 @@ public class Sonar extends Thread {
                         }
                     }
                 }
-        ).start();
+        );
+        listenThread.start();
     }
+
+
+    Handler receiverHandler = new Handler(Looper.getMainLooper()) {
+        @Override
+        public void handleMessage(Message inputMessage) {
+            // beep here
+            track.write(pulse, 0, pulse.length);
+            track.play();
+//            listenThread.;
+//            track.stop();
+//            recorder.stop();
+//            track.release();
+//            recorder.release();
+        }
+    };
 
 
     public Result getResult() {
