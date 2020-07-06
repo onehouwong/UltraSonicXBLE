@@ -64,7 +64,7 @@ public class Sonar extends Thread {
     AudioTimestamp at;
 
     Thread listenThread;
-    int flag = 0;
+    public int flag = 0;
 
     BLEController bleController;
 

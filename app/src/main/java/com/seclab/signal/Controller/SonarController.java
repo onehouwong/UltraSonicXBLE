@@ -86,7 +86,10 @@ public class SonarController {
 
     public void startReceiveSonar() {
 
-        sonsys = new Sonar(context, bleController);
+        if (sonsys == null)
+            sonsys = new Sonar(context, bleController);
+        sonsys.diffTime = 0;
+        sonsys.flag = 0;
 
 //        String distanceMeters = df.format(sonsys.result.distance);
 //        Log.i(TAG, "Distance=" + distanceMeters);
