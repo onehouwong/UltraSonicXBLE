@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.media.AudioAttributes;
 import android.media.AudioFormat;
@@ -21,7 +20,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.seclab.signal.Controller.BLEController;
 import com.seclab.signal.DSP.DSP;
@@ -56,19 +54,19 @@ public class Sonar extends Thread {
     AudioRecord recorder;
     AudioTrack track;
     short[] pulse;
-    long prev_buffer_cnt = 0;
-    long curr_buffer_cnt = 0;
-
-    long prev_peak_cnt = 0;
-    long curr_peak_cnt = 0;
-    AudioTimestamp at;
 
     Thread listenThread;
-    public int flag = 0;
+
+    public int beepCount = 0; // counter to record the #beep it received
+
+    long prev_buffer_cnt = 0;
+    long curr_buffer_cnt = 0;
+    long prev_peak_cnt = 0;
+    long curr_peak_cnt = 0;
+    public double diffTime;
 
     BLEController bleController;
 
-    public double diffTime;
 
     /**
      * Give the thread high priority so that it's not canceled unexpectedly, and
@@ -91,6 +89,7 @@ public class Sonar extends Thread {
                 AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT,
                 bufferSize * 2);
 
+        // init soundTrack
         if (Build.VERSION.SDK_INT < 26)
             track = new AudioTrack(AudioManager.STREAM_MUSIC, sampleRate,
                     AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT,
@@ -112,6 +111,9 @@ public class Sonar extends Thread {
         // start();
     }
 
+    /**
+     * Playing Thread. It will play the beep only once.
+     */
     @Override
     public void run() {
         this.thresholdPeak = thresholdPeak;
@@ -131,11 +133,8 @@ public class Sonar extends Thread {
             recorder.startRecording();
             for (int i=0; i<1; ++i) {
                 track.write(pulse, 0, pulse.length);
-//                Log.i("Sonar", "Time = " + System.nanoTime());
                 track.play();
-//                sleep(1000);
             }
-//            recorder.read(buffer, 0, buffer.length);
 
         }
         catch (Exception e) {
@@ -146,12 +145,12 @@ public class Sonar extends Thread {
 //            recorder.release();
         }
 
-        result = FilterAndClean.Distance(buffer, pulse, sampleRate, threshold,
-                maxDistanceMeters, deadZoneLength, thresholdPeak, this.tempSense.tempature);
-
     }
 
 
+    /**
+     * Listening thread. It will create a thread to keep listening to the beep.
+     */
     public void scheduleSensing()
     {
         if (recorder == null) {
@@ -165,6 +164,7 @@ public class Sonar extends Thread {
                 DSP.linearChirp(phase, f0, f1, t1, sampleRate), 0, numSamples),
                 bufferSize, delay));
 
+        // create listen thread
         listenThread = new Thread(
                 new Runnable()
                 {
@@ -179,38 +179,38 @@ public class Sonar extends Thread {
                                 recorder.startRecording();
                                 long timeStamp = System.nanoTime();
                                 recorder.read(buffer, 0, buffer.length);
+
+                                // calculate
                                 Result res = FilterAndClean.DistanceSingle(buffer, pulse, sampleRate, threshold, maxDistanceMeters, deadZoneLength, thresholdPeak, numSamples,0, timeStamp);
 
-                                if (res.elapseTime != 0) {
+                                // a beep is detected with the filtering function
+                                if (res.peakDetected) {
+                                        // update buffer length
                                         prev_buffer_cnt = curr_buffer_cnt;
                                         curr_buffer_cnt = counter;
 
+                                        // update peak index
                                         prev_peak_cnt = curr_peak_cnt;
                                         curr_peak_cnt = res.peakIndex;
 
-                                        // calculate time difference
+                                        // calculate time difference based on the buffer distance
                                         double sampleNum = (curr_buffer_cnt - prev_buffer_cnt) * bufferSize + (curr_peak_cnt - prev_peak_cnt);
                                         double diff = sampleNum / sampleRate;
 
-
-//                                    Log.i("Counter", "" + counter + "\tPeak: " + res.peakIndex);
-//                                    Toast.makeText(context, "Time: " + res.timeStamp, Toast.LENGTH_LONG).show();
-//                                    Log.i("Sonar", "Time: " + res.timeStamp);
                                         Log.i("Sonar", "Diff Time: " + diff);
 
-
-                                        // play sonar after 2 sec
-                                        if (flag < 1) {
-                                            // first beep
+                                        if (beepCount < 1) {
+                                            // first beep received
+                                            // if it is a BLE peripheral, play beep after 2 sec. If it is a BLE central, do nothing
                                             if (bleController.getRole() == BLEController.ROLE.PERIPHERAL)
                                                 receiverHandler.sendEmptyMessageDelayed(0, 2000);
-                                            ++flag;
+                                            ++beepCount;
                                         }
-                                        else if (flag == 1) {
-                                            // second beep
+                                        else if (beepCount == 1) {
+                                            // second beep received, record the time difference
                                             diffTime = diff;
                                             bleController.setTimeDiffValue(diff);
-                                            ++flag;
+                                            ++beepCount;
                                         }
 
                                     }
@@ -226,47 +226,16 @@ public class Sonar extends Thread {
     }
 
 
+    // handler for playing beep once
     Handler receiverHandler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(Message inputMessage) {
             // beep here
             track.write(pulse, 0, pulse.length);
             track.play();
-//            listenThread.;
-//            track.stop();
-//            recorder.stop();
-//            track.release();
-//            recorder.release();
         }
     };
 
-
-    public Result getResult() {
-//        Log.i("Audio", "Running Audio Thread");
-        short[] buffer = new short[bufferSize];
-
-
-        try {
-            recorder.startRecording();
-            recorder.read(buffer, 0, buffer.length);
-        }catch(Exception e){
-
-        }
-        finally {
-            //if( started) {
-            //    track.stop();
-            //   track.release();
-            //}
-//            recorder.stop();
-//            recorder.release();
-        }
-
-        return null;
-//        return FilterAndClean.Distance(buffer, pulse, sampleRate, threshold,
-//                maxDistanceMeters, deadZoneLength, thresholdPeak, this.tempSense.tempature);
-
-
-    }
 
 
     /**

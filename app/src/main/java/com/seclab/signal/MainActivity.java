@@ -141,20 +141,11 @@ public class MainActivity extends AppCompatActivity {
                 bleController.advertise();
                 sonarController.startSonar();
 
-                // sleep one second
-//                try {
-//                    Thread.sleep(1000);
-//                }
-//                catch(InterruptedException e) {
-//                    e.printStackTrace();
-//                }
             }
         });
 
 
     }
-
-
 
 
     @Override

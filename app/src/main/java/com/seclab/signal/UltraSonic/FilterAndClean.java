@@ -22,107 +22,10 @@ public class FilterAndClean {
     public static int sharpness = 1;
     public static int tThreshold = 2;
 
-    @TargetApi(Build.VERSION_CODES.GINGERBREAD)
-    public static Result Distance(short[] signal, short[] pulse,
-                                  int sampleRate, double threshold, double maxDistanceMeters,
-                                  int deadZoneLenght, int pthreshold, float tempature) {
 
-        soundSpeed = 331 + 0.6*15;//331 + 0.6*(double)tempature;
-        peakThreshold = pthreshold * multiple;
-        // Preprocessing for speed
-        // strip out first set of zeros. This deals with concurrency issue
-        // between the recording buffer and the play buffer
-        int startIndex = 0;
-        for (startIndex = 0; startIndex < signal.length; startIndex++) {
-            if ((signal[startIndex]) > threshold) {
-                break;
-            }
-        }
-        int samplesPerMeter = (int)(sampleRate / soundSpeed); // seed of sound is 330 meters
-        // per second in air.
-        int maxSamples =(int) (samplesPerMeter * maxDistanceMeters * 2); // We
-        // multiple
-        // by
-        // 2
-        // because
-        // it
-        // is
-        // round
-        // trip
-        maxSamples = (int) Math.pow(2,
-                Math.ceil(Math.log(maxSamples) / Math.log(2)));// Samples must
-        // be a power of
-        // 2 for FFT to
-        // run smoothly.
-        // Trim the pulse and signal based on range and concurrency mismatch
-        signal = Arrays
-                .copyOfRange(signal, startIndex, startIndex + maxSamples);
-        pulse = Arrays.copyOfRange(pulse, 0, maxSamples);
-
-        double distance = 0;
-        Complex[] compSignal = Complex.convertShortToComplex(signal);
-        // Complex[] compPulse = Complex.convertShortToComplex(pulse);
-        Complex[] fftSignal = FFT.fft(compSignal);
-        // Complex[] fftPulse = FFT.fft(compPulse);
-        Complex[] fftPulse = null;
-        if (cachedPulse == null) {
-
-            Complex[] compPulse = Complex.convertShortToComplex(pulse);
-            fftPulse = FFT.fft(compPulse);
-            cachedPulse = fftPulse;
-        } else {
-            fftPulse = cachedPulse;
-
-        }
-        Complex[] Z = new Complex[pulse.length];
-        int Zlen = Z.length;
-        for (int i = 0; i < Zlen; i++) {
-            Z[i] = (fftPulse[i].conjugate()).times(fftSignal[i]);
-        }
-
-        Complex[] ZH = SuppressNegative(Z);
-
-        Complex[] invZ = FFT.fftShift(FFT.ifft(ZH)); // Check for absolute and
-        // shifting.
-
-
-        // Make all the elements abs valued.
-        int lenInvZ = invZ.length;
-        double[] absInvZ = new double[lenInvZ];
-        for (int i = 0; i < lenInvZ; i++) {
-            absInvZ[i] = invZ[i].abs();
-        }
-        // double[] absInvZ = CrossCorr(signal, pulse) ;
-        // int lenInvZ = absInvZ.length;
-
-        // double[] absXcorr = absInvZ.clone();
-
-
-        // Remove the dead zone
-        // int firstIndex = getMaxIndex(absInvZ);
-        // double Value1 = Math.abs(absInvZ[firstIndex]);
-        // absInvZ = zeroDeadZone(firstIndex,deadZoneLenght,absInvZ);
-        // absInvZ = Arrays.copyOfRange(absInvZ,firstIndex+deadZoneLenght,
-        // absInvZ.length);
-        // int maxIndex = getMaxIndex(absInvZ);//+firstIndex+deadZoneLenght;
-        int[] peaks = peakIndex(absInvZ, peakThreshold, sharpness);
-        int firstIndex = peaks[0];
-        int secondIndex = peaks[1];
-        if (peaks[1] == 0) { // If not confident report zero;
-            secondIndex = peaks[0];
-        }
-        double t1 = ((double) (firstIndex) - (double) (lenInvZ) / (double) (2))
-                / ((double) sampleRate);
-        double t2 = ((double) (secondIndex) - (double) (lenInvZ) / (double) (2))
-                / ((double) sampleRate);
-//        Log.i("Sonar", firstIndex + " " + secondIndex);
-//        Log.i("Sonar", t1 + " " + t2);
-        double Value2 = Math.abs(absInvZ[secondIndex]);
-        return new Result((t2 - t1) * soundSpeed / (double) (2), Value2,
-                signal, absInvZ, 0, 0, 0);
-    }
-
-
+    /**
+     * Custom distance calculation function, use this instead of the above one
+     */
     @TargetApi(Build.VERSION_CODES.GINGERBREAD)
     public static Result DistanceSingle(short[] signal, short[] pulse,
                                   int sampleRate, double threshold, double maxDistanceMeters,
@@ -142,25 +45,14 @@ public class FilterAndClean {
             }
         }
 
-        if (startIndex != signal.length)
-            System.out.println();
 
-        int samplesPerMeter = (int)(sampleRate / soundSpeed); // seed of sound is 330 meters
-        // per second in air.
-        int maxSamples =(int) (samplesPerMeter * maxDistanceMeters * 2); // We
-        // multiple
-        // by
-        // 2
-        // because
-        // it
-        // is
-        // round
-        // trip
+        int samplesPerMeter = (int)(sampleRate / soundSpeed); // seed of sound is 330 meters per second in air.
+
+        int maxSamples =(int) (samplesPerMeter * maxDistanceMeters * 2); // We multiple by 2 because it is round trip
+
         maxSamples = (int) Math.pow(2,
-                Math.ceil(Math.log(maxSamples) / Math.log(2)));// Samples must
-        // be a power of
-        // 2 for FFT to
-        // run smoothly.
+                Math.ceil(Math.log(maxSamples) / Math.log(2))); // Samples must be a power of 2 for FFT to run smoothly.
+
         // Trim the pulse and signal based on range and concurrency mismatch
         signal = Arrays
                 .copyOfRange(signal, startIndex, startIndex + maxSamples);
@@ -223,48 +115,47 @@ public class FilterAndClean {
         }
 
 
-        int w0 = 30;
-
-        // L2S
-        List<Double> l2s = new ArrayList<>();
-        for (int s = firstIndex - w0/2 ; s < firstIndex + w0/2; ++s) {
-            try {
-                l2s.add(absXcorr[s]);
-            } catch (ArrayIndexOutOfBoundsException e) {
-                l2s.clear();
-                break;
-            }
-        }
-        double l1 = norm(l2s);
-
-        // L2N
-        List<Double> l2n = new ArrayList<>();
-        for (int s = firstIndex - numSamples - w0 ; s < firstIndex - numSamples; ++s) {
-            try {
-                l2n.add(absXcorr[s]);
-            } catch (ArrayIndexOutOfBoundsException e) {
-                l2n.clear();
-                break;
-            }
-        }
-        double l2 = norm(l2n);
-
-        double d = 0;
-        if (l2 == 0 && l1 != 0) {
-            d = 0;
-        }
-        else {
-            d = l1 / l2;
-        }
+//        int w0 = 30;
+//
+//        // L2S
+//        List<Double> l2s = new ArrayList<>();
+//        for (int s = firstIndex - w0/2 ; s < firstIndex + w0/2; ++s) {
+//            try {
+//                l2s.add(absXcorr[s]);
+//            } catch (ArrayIndexOutOfBoundsException e) {
+//                l2s.clear();
+//                break;
+//            }
+//        }
+//        double l1 = norm(l2s);
+//
+//        // L2N
+//        List<Double> l2n = new ArrayList<>();
+//        for (int s = firstIndex - numSamples - w0 ; s < firstIndex - numSamples; ++s) {
+//            try {
+//                l2n.add(absXcorr[s]);
+//            } catch (ArrayIndexOutOfBoundsException e) {
+//                l2n.clear();
+//                break;
+//            }
+//        }
+//        double l2 = norm(l2n);
+//
+//        double d = 0;
+//        if (l2 == 0 && l1 != 0) {
+//            d = 0;
+//        }
+//        else {
+//            d = l1 / l2;
+//        }
 
 
         firstIndex = 0; // start of buffer
 
         secondIndex = peaks[0] + startIndex; // index of the peak
 
-        double elapse_time = 0;
+        boolean peakDetected = false;
         double t1, t2, Value2;
-
 
 
         // make sure the peak value is greater than peak threshold
@@ -273,32 +164,23 @@ public class FilterAndClean {
 //            Log.i("Peak", "" + absInvZ[secondIndex - startIndex]);
 //            Log.i("Norm", "" + d);
 
-            // buffer_start  -  t1  - t2
             t1 = ((double) (firstIndex) - (double) (lenInvZ) / (double) (2))
                     / ((double) sampleRate);
             t2 = ((double) (secondIndex) - (double) (lenInvZ) / (double) (2))
                     / ((double) sampleRate);
             Value2 = Math.abs(absInvZ[secondIndex - startIndex]);
 
-            // Log.i("Sonar", t1 + " " + t2);
-
-            elapse_time = (double) secondIndex / (double) sampleRate * 1000000000;
+            peakDetected = true;
         }
         else {
             t1 = 0;
             t2 = 0;
             Value2 = 0;
-            elapse_time = 0;
+            peakDetected = false;
         }
 
-//        if (startIndex == originalLength) {
-//            elapse_time = 0;
-//        }
-
-        double ts = elapse_time + timeStamp;
-
         return new Result((t2 - t1) * soundSpeed / (double) (2), Value2,
-                signal, absInvZ, elapse_time, ts, secondIndex);
+                signal, absInvZ, peakDetected, secondIndex);
     }
 
 

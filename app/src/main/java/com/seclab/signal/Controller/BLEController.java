@@ -30,7 +30,6 @@ import android.os.ParcelUuid;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.seclab.signal.UltraSonic.Sonar;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,26 +73,6 @@ public class BLEController {
         BluetoothGattCharacteristic c = receiver.getService(UUID.fromString(DEFAULT_UUID)).getCharacteristic(UUID.fromString(Characteristic_UUID));
         c.setValue("" + t);
         boolean suc = receiver.writeCharacteristic(c);
-
-//        if (this.role == ROLE.CENTRAL) {
-//
-////            bluetoothGattServer.getService(UUID.fromString(DEFAULT_UUID)).getCharacteristic(UUID.fromString(Characteristic_UUID)).setValue("" + t);
-//
-////            String val = receiver.getService(UUID.fromString(DEFAULT_UUID)).getCharacteristic(UUID.fromString(Characteristic_UUID2)).getStringValue(0);
-////
-////            while (val == null || val.equalsIgnoreCase("-1")) {
-////                val = receiver.getService(UUID.fromString(DEFAULT_UUID)).getCharacteristic(UUID.fromString(Characteristic_UUID2)).getStringValue(0);
-////            }
-//        }
-//        else {
-//            bluetoothGattServer.getService(UUID.fromString(DEFAULT_UUID)).getCharacteristic(UUID.fromString(Characteristic_UUID2)).setValue("" + t);
-//
-//            String val = receiver.getService(UUID.fromString(DEFAULT_UUID)).getCharacteristic(UUID.fromString(Characteristic_UUID)).getStringValue(0);
-//
-//            while (val == null || val.equalsIgnoreCase("-1")) {
-//                val = receiver.getService(UUID.fromString(DEFAULT_UUID)).getCharacteristic(UUID.fromString(Characteristic_UUID2)).getStringValue(0);
-//            }
-//        }
     }
 
     public void initGATT() {
@@ -189,7 +168,9 @@ public class BLEController {
     public ROLE getRole () {return this.role;}
 
 
-    // scanning
+    /**
+     * Start BLE Scanning, as a BLE central
+     */
     public void scan() {
         role = ROLE.CENTRAL;
 
@@ -279,7 +260,9 @@ public class BLEController {
     }
 
 
-    // advertising
+    /**
+     * Start BLE advertising, as a BLE peripheral
+     */
     public void advertise() {
 
         role = ROLE.PERIPHERAL;
