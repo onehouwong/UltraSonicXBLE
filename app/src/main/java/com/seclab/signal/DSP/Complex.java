@@ -1,9 +1,10 @@
 package com.seclab.signal.DSP;
 
 
-/**L
+/**
+ * Code clone from https://github.com/researcher111/SonarSimple
  * Credit to http://introcs.cs.princeton.edu/java/97data/FFT.java.html
- */
+ **/
 
 
 /*************************************************************************

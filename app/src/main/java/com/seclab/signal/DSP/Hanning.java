@@ -1,5 +1,8 @@
 package com.seclab.signal.DSP;
 
+/**
+ * Code clone from https://github.com/researcher111/SonarSimple
+ */
 
 public class Hanning {
 

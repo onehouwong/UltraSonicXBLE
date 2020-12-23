@@ -8,6 +8,10 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 
+/**
+ * Code clone from https://github.com/researcher111/SonarSimple
+ */
+
 public class TempSense  implements SensorEventListener {
     private SensorManager mSensorManager;
     private Sensor mTemp;

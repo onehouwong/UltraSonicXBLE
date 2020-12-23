@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">UltraSonicXBLE</string>
     <string name="action_settings">Settings</string>
+    <string name="instruction1">Step1: press \"Start Receiver Side\" on one smartphone</string>
+    <string name="instruction2">Step2: press \"Start Sender Side\" on the other smartphone</string>
+
 </resources>

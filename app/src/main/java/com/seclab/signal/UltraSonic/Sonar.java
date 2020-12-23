@@ -24,6 +24,10 @@ import android.util.Log;
 import com.seclab.signal.Controller.BLEController;
 import com.seclab.signal.DSP.DSP;
 
+/**
+ * Code adapted from https://github.com/researcher111/SonarSimple
+ */
+
 /*
  * Thread to manage live recording/playback of voice input from the device's microphone.
  */

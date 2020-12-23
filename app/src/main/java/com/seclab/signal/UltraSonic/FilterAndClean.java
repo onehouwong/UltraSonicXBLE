@@ -12,6 +12,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Code adapted from https://github.com/researcher111/SonarSimple
+ */
 
 public class FilterAndClean {
     public static double soundSpeed = 346.65; // Speed of sound in air
@@ -113,42 +116,6 @@ public class FilterAndClean {
         if (peaks[1] == 0) { // If not confident report zero;
             secondIndex = peaks[0];
         }
-
-
-//        int w0 = 30;
-//
-//        // L2S
-//        List<Double> l2s = new ArrayList<>();
-//        for (int s = firstIndex - w0/2 ; s < firstIndex + w0/2; ++s) {
-//            try {
-//                l2s.add(absXcorr[s]);
-//            } catch (ArrayIndexOutOfBoundsException e) {
-//                l2s.clear();
-//                break;
-//            }
-//        }
-//        double l1 = norm(l2s);
-//
-//        // L2N
-//        List<Double> l2n = new ArrayList<>();
-//        for (int s = firstIndex - numSamples - w0 ; s < firstIndex - numSamples; ++s) {
-//            try {
-//                l2n.add(absXcorr[s]);
-//            } catch (ArrayIndexOutOfBoundsException e) {
-//                l2n.clear();
-//                break;
-//            }
-//        }
-//        double l2 = norm(l2n);
-//
-//        double d = 0;
-//        if (l2 == 0 && l1 != 0) {
-//            d = 0;
-//        }
-//        else {
-//            d = l1 / l2;
-//        }
-
 
         firstIndex = 0; // start of buffer
 
@@ -256,7 +223,6 @@ public class FilterAndClean {
                 }
             }
         }
-        //double[] realivant = Arrays.copyOfRange(timeSeries, start-30, start+500);
         return peaks;
 
     }

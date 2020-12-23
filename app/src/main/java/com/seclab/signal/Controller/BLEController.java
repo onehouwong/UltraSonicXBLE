@@ -31,6 +31,8 @@ import android.util.Log;
 import android.widget.Toast;
 
 
+import com.seclab.signal.BLE.DistanceUtil;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -175,6 +177,7 @@ public class BLEController {
         role = ROLE.CENTRAL;
 
         List<ScanFilter> scanFilter = new ArrayList<>();
+
         scanFilter.add(new ScanFilter.Builder().setServiceUuid(ParcelUuid.fromString(DEFAULT_UUID)).build());
 
         ScanSettings settings = new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build();
@@ -184,8 +187,12 @@ public class BLEController {
             public void onScanResult(int callbackType, final ScanResult result) {
                 super.onScanResult(callbackType, result);
 
+                double distance = DistanceUtil.calculateDistance(result.getRssi(), result.getTxPower());
+                Log.i("Distance", "distance = " + distance + "\tRSSI = " + result.getRssi());
+
                 // discover device, connect
-                if (receiver == null) {
+                // TODO
+                if (false && receiver == null) {
                     result.getDevice().connectGatt(context, false, new BluetoothGattCallback() {
                         @Override
                         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {

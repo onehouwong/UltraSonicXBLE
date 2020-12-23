@@ -72,80 +72,100 @@ public class MainActivity extends AppCompatActivity {
         final SonarController sonarController = new SonarController(this.getApplicationContext());
         final BLEController bleController = new BLEController(this.getApplicationContext(), sonarController);
 
-        sonarController.setBLEController(bleController);
+//        sonarController.setBLEController(bleController);
+//
+//
+//        // BLE
+//        Button startBtn = findViewById(R.id.start);
+//        Button stopBtn = findViewById(R.id.stop);
+//        Button scanBtn = findViewById(R.id.scan);
+//
+//
+//        startBtn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                // start BLE advertising
+//                bleController.advertise();
+//            }
+//        });
+//
+//
+//        stopBtn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                bleController.stopAdvertising();
+//            }
+//        });
+//
+//        scanBtn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                MainActivity.this.runOnUiThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        bleController.scan();
+//                    }
+//                });
+//            }
+//        });
+//
+//
+//
+//        // Sonar
+//        Button startSonarBtn = findViewById(R.id.startSonar);
+//        Button readSonarBtn = findViewById(R.id.readSonar);
+//
+//
+//        startSonarBtn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                sonarController.startSonar();
+//            }
+//        });
+//
+//
+//        readSonarBtn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                sonarController.startReceiveSonar();
+//            }
+//        });
+//
+//
+//        // play
+//        Button ganBtn = findViewById(R.id.play);
+//        ganBtn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//
+//                bleController.advertise();
+//                sonarController.startSonar();
+//
+//            }
+//        });
 
 
-        // BLE
-        Button startBtn = findViewById(R.id.start);
-        Button stopBtn = findViewById(R.id.stop);
-        Button scanBtn = findViewById(R.id.scan);
+        Button startSender = findViewById(R.id.start_sender);
+        Button startReceiver = findViewById(R.id.start_receiver);
 
-
-        startBtn.setOnClickListener(new View.OnClickListener() {
+        startSender.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // start BLE advertising
                 bleController.advertise();
-            }
-        });
-
-
-        stopBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                bleController.stopAdvertising();
-            }
-        });
-
-        scanBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                MainActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        bleController.scan();
-                    }
-                });
-            }
-        });
-
-
-
-        // Sonar
-        Button startSonarBtn = findViewById(R.id.startSonar);
-        Button readSonarBtn = findViewById(R.id.readSonar);
-
-
-        startSonarBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                sonarController.startSonar();
-            }
-        });
-
-
-        readSonarBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
                 sonarController.startReceiveSonar();
             }
         });
 
 
-        // play
-        Button ganBtn = findViewById(R.id.play);
-        ganBtn.setOnClickListener(new View.OnClickListener() {
+        startReceiver.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-                bleController.advertise();
-                sonarController.startSonar();
-
+                bleController.scan();
+                sonarController.startReceiveSonar();
             }
         });
-
-
     }
+
 
 
     @Override

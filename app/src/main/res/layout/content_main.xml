@@ -13,76 +13,96 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-<!--        <TextView-->
-<!--            android:layout_width="match_parent"-->
+        <Button
+            android:id="@+id/start_sender"
+            style="@style/Widget.AppCompat.Button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="40sp"
+            android:text="Start Sender Side" />
+
+
+        <Button
+            android:id="@+id/start_receiver"
+            style="@style/Widget.AppCompat.Button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="40sp"
+            android:text="Start Receiver Side" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20pt"
+            android:layout_gravity="center_horizontal"
+            android:text="@string/instruction1" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="@string/instruction2" />
+
+<!--        <Button-->
+<!--            android:id="@+id/start"-->
+<!--            style="@style/Widget.AppCompat.Button"-->
+<!--            android:layout_width="wrap_content"-->
 <!--            android:layout_height="wrap_content"-->
+<!--            android:layout_gravity="center_horizontal"-->
 <!--            android:layout_marginTop="40sp"-->
-<!--            android:text="BLE Signal Test!"-->
-<!--            android:textAlignment="center"-->
-<!--            app:layout_constraintBottom_toBottomOf="parent"-->
-<!--            app:layout_constraintLeft_toLeftOf="parent"-->
-<!--            app:layout_constraintRight_toRightOf="parent"-->
-<!--            app:layout_constraintTop_toTopOf="parent" />-->
+<!--            android:text="Start Advertising!" />-->
 
 
-        <Button
-            android:id="@+id/start"
-            style="@style/Widget.AppCompat.Button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="40sp"
-            android:text="Start Advertising!" />
+<!--        <Button-->
+<!--            android:id="@+id/stop"-->
+<!--            style="@style/Widget.AppCompat.Button"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_gravity="center_horizontal"-->
+<!--            android:layout_marginTop="40sp"-->
+<!--            android:text="Stop Advertising!" />-->
 
 
-        <Button
-            android:id="@+id/stop"
-            style="@style/Widget.AppCompat.Button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="40sp"
-            android:text="Stop Advertising!" />
+<!--        <Button-->
+<!--            android:id="@+id/scan"-->
+<!--            style="@style/Widget.AppCompat.Button"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_gravity="center_horizontal"-->
+<!--            android:layout_marginTop="40sp"-->
+<!--            android:text="Start Scanning!" />-->
 
 
-        <Button
-            android:id="@+id/scan"
-            style="@style/Widget.AppCompat.Button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="40sp"
-            android:text="Start Scanning!" />
+<!--        <Button-->
+<!--            android:id="@+id/play"-->
+<!--            style="@style/Widget.AppCompat.Button"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_gravity="center_horizontal"-->
+<!--            android:layout_marginTop="40sp"-->
+<!--            android:text="GAN!" />-->
 
 
-        <Button
-            android:id="@+id/play"
-            style="@style/Widget.AppCompat.Button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="40sp"
-            android:text="GAN!" />
+<!--        <Button-->
+<!--            android:id="@+id/startSonar"-->
+<!--            style="@style/Widget.AppCompat.Button"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_gravity="center_horizontal"-->
+<!--            android:layout_marginTop="40sp"-->
+<!--            android:text="Start Sonar!" />-->
 
 
-        <Button
-            android:id="@+id/startSonar"
-            style="@style/Widget.AppCompat.Button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="40sp"
-            android:text="Start Sonar!" />
-
-
-        <Button
-            android:id="@+id/readSonar"
-            style="@style/Widget.AppCompat.Button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="40sp"
-            android:text="Read Sonar" />
+<!--        <Button-->
+<!--            android:id="@+id/readSonar"-->
+<!--            style="@style/Widget.AppCompat.Button"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_gravity="center_horizontal"-->
+<!--            android:layout_marginTop="40sp"-->
+<!--            android:text="Read Sonar" />-->
 
     </LinearLayout>
 

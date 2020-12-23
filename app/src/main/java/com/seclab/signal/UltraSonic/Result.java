@@ -1,5 +1,8 @@
 package com.seclab.signal.UltraSonic;
 
+/**
+ * Code adapted from https://github.com/researcher111/SonarSimple
+ */
 
 public class Result {
     public double distance;
